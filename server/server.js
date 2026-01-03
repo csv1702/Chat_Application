@@ -1,0 +1,95 @@
+const chatSocket = require("./sockets/chatSocket");
+const socketAuth = require("./utils/socketAuth");
+const User = require("./models/User");
+const express = require("express");
+const dotenv = require("dotenv");
+const cors = require("cors");
+const cookieParser = require("cookie-parser");
+const morgan = require("morgan");
+const http = require("http");
+const { Server } = require("socket.io");
+
+const connectDB = require("./config/db");
+const authRoutes = require("./routes/authRoutes");
+const chatRoutes = require("./routes/chatRoutes");
+const messageRoutes = require("./routes/messageRoutes");
+
+dotenv.config();
+
+const app = express();
+const server = http.createServer(app);
+
+/* ---------- DATABASE ---------- */
+connectDB();
+
+/* ---------- MIDDLEWARE ---------- */
+app.use(express.json());
+app.use(cookieParser());
+app.use(morgan("dev"));
+
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+  })
+);
+
+/* ---------- ROUTES ---------- */
+app.use("/api/auth", authRoutes);
+app.use("/api/chats", chatRoutes);
+app.use("/api/messages", messageRoutes);
+
+/* ---------- HEALTH CHECK ---------- */
+app.get("/", (req, res) => {
+  res.send("Server is running");
+});
+
+/* ---------- SOCKET.IO ---------- */
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+  },
+});
+
+// In-memory online users: userId -> socketId
+const onlineUsers = new Map();
+
+io.on("connection", async (socket) => {
+  const userId = socketAuth(socket);
+
+  if (!userId) {
+    socket.disconnect();
+    return;
+  }
+
+  socket.userId = userId;
+
+  onlineUsers.set(userId, socket.id);
+
+  await User.findByIdAndUpdate(userId, { isOnline: true });
+
+  socket.broadcast.emit("user_online", userId);
+
+  // Attach chat socket events
+  chatSocket(io, socket, onlineUsers);
+
+  socket.on("disconnect", async () => {
+    onlineUsers.delete(userId);
+
+    await User.findByIdAndUpdate(userId, {
+      isOnline: false,
+      lastSeen: new Date(),
+    });
+
+    socket.broadcast.emit("user_offline", userId);
+  });
+});
+
+
+/* ---------- START SERVER ---------- */
+const PORT = process.env.PORT || 5000;
+
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
