@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { getSocket } from "../socket/socket";
 
 const ChatWindow = ({ activeChat }) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
+  const [joined, setJoined] = useState(false);
   const bottomRef = useRef(null);
 
+  /* ---------- FETCH MESSAGE HISTORY (REST) ---------- */
   useEffect(() => {
     if (!activeChat) return;
 
@@ -25,27 +28,58 @@ const ChatWindow = ({ activeChat }) => {
     fetchMessages();
   }, [activeChat]);
 
+  /* ---------- JOIN CHAT ROOM ---------- */
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({
-      behavior: "smooth",
-    });
+    if (!activeChat) return;
+
+    const socket = getSocket();
+    if (!socket) return;
+
+    socket.emit("join_chat", activeChat._id);
+    setJoined(true);
+
+    return () => {
+      setJoined(false);
+    };
+  }, [activeChat]);
+
+  /* ---------- RECEIVE REAL-TIME MESSAGE ---------- */
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleReceiveMessage = (message) => {
+      if (message.chat !== activeChat?._id) return;
+
+      setMessages((prev) => [...prev, message]);
+    };
+
+    socket.on("receive_message", handleReceiveMessage);
+
+    return () => {
+      socket.off("receive_message", handleReceiveMessage);
+    };
+  }, [activeChat]);
+
+  /* ---------- AUTO SCROLL ---------- */
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const sendMessage = async (e) => {
+  /* ---------- SEND MESSAGE (SOCKET ONLY) ---------- */
+  const sendMessage = (e) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !joined) return;
 
-    try {
-      const res = await api.post("/messages", {
-        chatId: activeChat._id,
-        content: newMessage,
-      });
+    const socket = getSocket();
+    if (!socket) return;
 
-      setMessages((prev) => [...prev, res.data]);
-      setNewMessage("");
-    } catch (error) {
-      console.error("Failed to send message");
-    }
+    socket.emit("send_message", {
+      chatId: activeChat._id,
+      content: newMessage,
+    });
+
+    setNewMessage("");
   };
 
   if (!activeChat) {
@@ -70,11 +104,10 @@ const ChatWindow = ({ activeChat }) => {
         {messages.map((msg) => {
           const senderId =
             typeof msg.sender === "string"
-                ? msg.sender
-                : msg.sender._id;
+              ? msg.sender
+              : msg.sender._id;
 
           const isOwn = senderId === user._id;
-
 
           return (
             <div
@@ -98,7 +131,7 @@ const ChatWindow = ({ activeChat }) => {
         <div ref={bottomRef} />
       </div>
 
-      {/* Message Input */}
+      {/* Input */}
       <form
         onSubmit={sendMessage}
         className="p-4 border-t flex gap-2"

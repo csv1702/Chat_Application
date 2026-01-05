@@ -1,5 +1,9 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import api from "../services/api";
+import {
+  connectSocket,
+  disconnectSocket,
+} from "../socket/socket";
 
 const AuthContext = createContext(null);
 
@@ -11,8 +15,10 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await api.get("/auth/me");
       setUser(res.data);
-    } catch (error) {
+      connectSocket();
+    } catch {
       setUser(null);
+      disconnectSocket();
     } finally {
       setLoading(false);
     }
@@ -20,6 +26,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     fetchUser();
+    return () => disconnectSocket();
   }, []);
 
   return (
