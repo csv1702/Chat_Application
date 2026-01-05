@@ -10,7 +10,7 @@ const ChatSidebar = ({ activeChat, setActiveChat }) => {
     const fetchChats = async () => {
       try {
         const res = await api.get("/chats");
-        console.log("Chats API response:", res.data);//hhhhhhh
+        // console.log("Chats API response:", res.data);//hhhhhhh
         setChats(res.data);
       } catch (error) {
         console.error("Failed to fetch chats");
@@ -20,7 +20,7 @@ const ChatSidebar = ({ activeChat, setActiveChat }) => {
     fetchChats();
   }, []);
 
-  console.log("Logged in user:", user);
+//   console.log("Logged in user:", user);
 
 
   const getChatName = (chat) => {

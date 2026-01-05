@@ -1,4 +1,53 @@
+import { useEffect, useRef, useState } from "react";
+import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
+
 const ChatWindow = ({ activeChat }) => {
+  const { user } = useAuth();
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
+  const bottomRef = useRef(null);
+
+  useEffect(() => {
+    if (!activeChat) return;
+
+    const fetchMessages = async () => {
+      try {
+        const res = await api.get(
+          `/messages/${activeChat._id}`
+        );
+        setMessages(res.data);
+      } catch (error) {
+        console.error("Failed to fetch messages");
+      }
+    };
+
+    fetchMessages();
+  }, [activeChat]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, [messages]);
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
+
+    try {
+      const res = await api.post("/messages", {
+        chatId: activeChat._id,
+        content: newMessage,
+      });
+
+      setMessages((prev) => [...prev, res.data]);
+      setNewMessage("");
+    } catch (error) {
+      console.error("Failed to send message");
+    }
+  };
+
   if (!activeChat) {
     return (
       <div className="h-full flex items-center justify-center text-gray-500">
@@ -16,12 +65,54 @@ const ChatWindow = ({ activeChat }) => {
           : "Conversation"}
       </div>
 
-      {/* Messages area (placeholder for now) */}
-      <div className="flex-1 p-4 overflow-y-auto">
-        <p className="text-gray-400">
-          Messages will appear here
-        </p>
+      {/* Messages */}
+      <div className="flex-1 p-4 overflow-y-auto space-y-2 bg-gray-50">
+        {messages.map((msg) => {
+          const senderId =
+            typeof msg.sender === "string"
+                ? msg.sender
+                : msg.sender._id;
+
+          const isOwn = senderId === user._id;
+
+
+          return (
+            <div
+              key={msg._id}
+              className={`flex ${
+                isOwn ? "justify-end" : "justify-start"
+              }`}
+            >
+              <div
+                className={`max-w-xs px-4 py-2 rounded-lg text-sm ${
+                  isOwn
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200"
+                }`}
+              >
+                {msg.content}
+              </div>
+            </div>
+          );
+        })}
+        <div ref={bottomRef} />
       </div>
+
+      {/* Message Input */}
+      <form
+        onSubmit={sendMessage}
+        className="p-4 border-t flex gap-2"
+      >
+        <input
+          className="flex-1 border rounded px-3 py-2"
+          placeholder="Type a message..."
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+        />
+        <button className="bg-blue-600 text-white px-4 rounded">
+          Send
+        </button>
+      </form>
     </div>
   );
 };
