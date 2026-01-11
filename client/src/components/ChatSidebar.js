@@ -55,7 +55,8 @@ const ChatSidebar = ({ activeChat, setActiveChat }) => {
             <div
               key={chat._id}
               onClick={() => setActiveChat(chat)}
-              className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition border-l-4 ${
+              className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition-all duration-150 border-l-4 hover:scale-[1.01]
+ ${
                 activeChat?._id === chat._id
                   ? "bg-blue-50 border-blue-600"
                   : "border-transparent hover:bg-gray-100"

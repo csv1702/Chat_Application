@@ -227,12 +227,13 @@ const ChatWindow = ({ activeChat, onBack }) => {
               }`}
             >
               <div
-                className={`max-w-[70%] px-4 py-2 rounded-2xl text-sm break-words whitespace-pre-wrap shadow ${
-                  isOwn
-                    ? "bg-blue-600 text-white rounded-br-none"
-                    : "bg-white text-gray-800 rounded-bl-none"
-                }`}
-              >
+  className={`max-w-[70%] px-4 py-2 rounded-2xl text-sm break-words whitespace-pre-wrap shadow transition-all duration-200 ease-out ${
+    isOwn
+      ? "bg-blue-600 text-white rounded-br-none translate-y-0"
+      : "bg-white text-gray-800 rounded-bl-none"
+  }`}
+>
+
                 {msg.content}
               </div>
             </div>
@@ -240,7 +241,7 @@ const ChatWindow = ({ activeChat, onBack }) => {
         })}
 
         {typingUser && (
-          <div className="text-sm text-gray-500 italic">
+          <div className="text-sm text-gray-500 italic animate-pulse">
             {typingUser} is typing...
           </div>
         )}
@@ -260,7 +261,8 @@ const ChatWindow = ({ activeChat, onBack }) => {
           onChange={handleTypingChange}
         />
 
-        <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 rounded-full transition">
+        <button className="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white px-5 rounded-full transition transform duration-150">
+
           Send
         </button>
       </form>
