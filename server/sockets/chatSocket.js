@@ -8,19 +8,20 @@ module.exports = (io, socket) => {
   });
 
   /* ---------- TYPING INDICATOR ---------- */
-  socket.on("typing", ({ chatId }) => {
+  socket.on("typing", ({ chatId, userId, username }) => {
     if (!chatId) return;
+
     socket.to(chatId).emit("typing", {
-      chatId,
-      userId: socket.userId,
+      userId,
+      username,
     });
   });
 
-  socket.on("stop_typing", ({ chatId }) => {
+  socket.on("stop_typing", ({ chatId, userId }) => {
     if (!chatId) return;
+
     socket.to(chatId).emit("stop_typing", {
-      chatId,
-      userId: socket.userId,
+      userId,
     });
   });
 
@@ -62,9 +63,7 @@ module.exports = (io, socket) => {
           _id: { $in: messageIds },
           readBy: { $ne: socket.userId },
         },
-        {
-          $addToSet: { readBy: socket.userId },
-        }
+        { $addToSet: { readBy: socket.userId } }
       );
 
       socket.to(chatId).emit("message_read", {

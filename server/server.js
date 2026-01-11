@@ -1,6 +1,3 @@
-const chatSocket = require("./sockets/chatSocket");
-const socketAuth = require("./utils/socketAuth");
-const User = require("./models/User");
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
@@ -13,6 +10,10 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const messageRoutes = require("./routes/messageRoutes");
+
+const chatSocket = require("./sockets/chatSocket");
+const socketAuth = require("./utils/socketAuth");
+const User = require("./models/User");
 
 dotenv.config();
 
@@ -52,7 +53,7 @@ const io = new Server(server, {
   },
 });
 
-// In-memory online users: userId -> socketId
+// online users map (kept as-is)
 const onlineUsers = new Map();
 
 io.on("connection", async (socket) => {
@@ -64,15 +65,15 @@ io.on("connection", async (socket) => {
   }
 
   socket.userId = userId;
-
   onlineUsers.set(userId, socket.id);
 
   await User.findByIdAndUpdate(userId, { isOnline: true });
-
   socket.broadcast.emit("user_online", userId);
 
-  // Attach chat socket events
-  chatSocket(io, socket, onlineUsers);
+  console.log("User connected:", userId);
+
+  // attach chat socket handlers
+  chatSocket(io, socket);
 
   socket.on("disconnect", async () => {
     onlineUsers.delete(userId);
@@ -83,9 +84,9 @@ io.on("connection", async (socket) => {
     });
 
     socket.broadcast.emit("user_offline", userId);
+    console.log("User disconnected:", userId);
   });
 });
-
 
 /* ---------- START SERVER ---------- */
 const PORT = process.env.PORT || 5000;

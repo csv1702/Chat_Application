@@ -3,14 +3,20 @@ import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { getSocket } from "../socket/socket";
 
+const TYPING_TIMEOUT = 2000; // 2 seconds
+
 const ChatWindow = ({ activeChat }) => {
   const { user } = useAuth();
+
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [joined, setJoined] = useState(false);
-  const bottomRef = useRef(null);
+  const [typingUser, setTypingUser] = useState(null);
 
-  /* ---------- FETCH MESSAGE HISTORY (REST) ---------- */
+  const bottomRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+
+  /* ---------- FETCH MESSAGE HISTORY ---------- */
   useEffect(() => {
     if (!activeChat) return;
 
@@ -20,7 +26,7 @@ const ChatWindow = ({ activeChat }) => {
           `/messages/${activeChat._id}`
         );
         setMessages(res.data);
-      } catch (error) {
+      } catch (err) {
         console.error("Failed to fetch messages");
       }
     };
@@ -40,18 +46,19 @@ const ChatWindow = ({ activeChat }) => {
 
     return () => {
       setJoined(false);
+      setTypingUser(null);
     };
   }, [activeChat]);
 
-  /* ---------- RECEIVE REAL-TIME MESSAGE ---------- */
+  /* ---------- RECEIVE MESSAGES ---------- */
   useEffect(() => {
     const socket = getSocket();
     if (!socket) return;
 
     const handleReceiveMessage = (message) => {
       if (message.chat !== activeChat?._id) return;
-
       setMessages((prev) => [...prev, message]);
+      setTypingUser(null); // stop typing on message receive
     };
 
     socket.on("receive_message", handleReceiveMessage);
@@ -61,12 +68,63 @@ const ChatWindow = ({ activeChat }) => {
     };
   }, [activeChat]);
 
+  /* ---------- TYPING EVENTS ---------- */
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleTyping = ({ userId, username }) => {
+      if (userId === user._id) return;
+      setTypingUser(username);
+    };
+
+    const handleStopTyping = ({ userId }) => {
+      if (userId === user._id) return;
+      setTypingUser(null);
+    };
+
+    socket.on("typing", handleTyping);
+    socket.on("stop_typing", handleStopTyping);
+
+    return () => {
+      socket.off("typing", handleTyping);
+      socket.off("stop_typing", handleStopTyping);
+    };
+  }, [activeChat, user._id]);
+
   /* ---------- AUTO SCROLL ---------- */
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, typingUser]);
 
-  /* ---------- SEND MESSAGE (SOCKET ONLY) ---------- */
+  /* ---------- HANDLE INPUT CHANGE (DEBOUNCED) ---------- */
+  const handleTypingChange = (e) => {
+    setNewMessage(e.target.value);
+
+    if (!joined) return;
+
+    const socket = getSocket();
+    if (!socket) return;
+
+    socket.emit("typing", {
+      chatId: activeChat._id,
+      userId: user._id,
+      username: user.username,
+    });
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit("stop_typing", {
+        chatId: activeChat._id,
+        userId: user._id,
+      });
+    }, TYPING_TIMEOUT);
+  };
+
+  /* ---------- SEND MESSAGE ---------- */
   const sendMessage = (e) => {
     e.preventDefault();
     if (!newMessage.trim() || !joined) return;
@@ -77,6 +135,11 @@ const ChatWindow = ({ activeChat }) => {
     socket.emit("send_message", {
       chatId: activeChat._id,
       content: newMessage,
+    });
+
+    socket.emit("stop_typing", {
+      chatId: activeChat._id,
+      userId: user._id,
     });
 
     setNewMessage("");
@@ -117,17 +180,26 @@ const ChatWindow = ({ activeChat }) => {
               }`}
             >
               <div
-                className={`max-w-xs px-4 py-2 rounded-lg text-sm ${
-                  isOwn
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200"
-                }`}
-              >
-                {msg.content}
-              </div>
+  className={`max-w-[70%] px-4 py-2 rounded-lg text-sm break-words whitespace-pre-wrap ${
+    isOwn
+      ? "bg-blue-600 text-white"
+      : "bg-gray-200"
+  }`}
+>
+  {msg.content}
+</div>
+
             </div>
           );
         })}
+
+        {/* Typing indicator */}
+        {typingUser && (
+          <div className="text-sm text-gray-500 italic">
+            {typingUser} is typing...
+          </div>
+        )}
+
         <div ref={bottomRef} />
       </div>
 
@@ -140,7 +212,7 @@ const ChatWindow = ({ activeChat }) => {
           className="flex-1 border rounded px-3 py-2"
           placeholder="Type a message..."
           value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
+          onChange={handleTypingChange}
         />
         <button className="bg-blue-600 text-white px-4 rounded">
           Send
