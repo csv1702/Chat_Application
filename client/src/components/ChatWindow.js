@@ -3,14 +3,10 @@ import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { getSocket } from "../socket/socket";
 
-const TYPING_TIMEOUT = 2000; // 2 seconds
-
-
+const TYPING_TIMEOUT = 2000;
 
 const ChatWindow = ({ activeChat }) => {
   const { user, onlineUsers } = useAuth();
-
-  
 
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
@@ -20,22 +16,18 @@ const ChatWindow = ({ activeChat }) => {
   const bottomRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
-  /* ---------- GET OTHER USER (1–1 CHAT) ---------- */
-  
-  
+  /* ---------- SAFE OTHER USER ---------- */
   const otherUser =
-  activeChat &&
-  !activeChat.isGroup &&
-  activeChat.members
-    ? activeChat.members.find(
-        (m) => m._id !== user._id
-      )
-    : null;
-
+    activeChat &&
+    !activeChat.isGroup &&
+    Array.isArray(activeChat.members)
+      ? activeChat.members.find(
+          (m) => m._id !== user._id
+        )
+      : null;
 
   const isOnline =
-    otherUser &&
-    onlineUsers.includes(otherUser._id);
+    otherUser && onlineUsers.includes(otherUser._id);
 
   /* ---------- FETCH MESSAGE HISTORY ---------- */
   useEffect(() => {
@@ -47,7 +39,7 @@ const ChatWindow = ({ activeChat }) => {
           `/messages/${activeChat._id}`
         );
         setMessages(res.data);
-      } catch (err) {
+      } catch {
         console.error("Failed to fetch messages");
       }
     };
@@ -73,11 +65,13 @@ const ChatWindow = ({ activeChat }) => {
 
   /* ---------- RECEIVE MESSAGES ---------- */
   useEffect(() => {
+    if (!activeChat) return;
+
     const socket = getSocket();
     if (!socket) return;
 
     const handleReceiveMessage = (message) => {
-      if (message.chat !== activeChat?._id) return;
+      if (message.chat !== activeChat._id) return;
       setMessages((prev) => [...prev, message]);
       setTypingUser(null);
     };
@@ -91,6 +85,8 @@ const ChatWindow = ({ activeChat }) => {
 
   /* ---------- TYPING EVENTS ---------- */
   useEffect(() => {
+    if (!activeChat) return;
+
     const socket = getSocket();
     if (!socket) return;
 
@@ -118,11 +114,11 @@ const ChatWindow = ({ activeChat }) => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typingUser]);
 
-  /* ---------- HANDLE INPUT CHANGE ---------- */
+  /* ---------- INPUT CHANGE ---------- */
   const handleTypingChange = (e) => {
     setNewMessage(e.target.value);
 
-    if (!joined) return;
+    if (!joined || !activeChat) return;
 
     const socket = getSocket();
     if (!socket) return;
@@ -148,7 +144,7 @@ const ChatWindow = ({ activeChat }) => {
   /* ---------- SEND MESSAGE ---------- */
   const sendMessage = (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !joined) return;
+    if (!newMessage.trim() || !joined || !activeChat) return;
 
     const socket = getSocket();
     if (!socket) return;
@@ -166,6 +162,7 @@ const ChatWindow = ({ activeChat }) => {
     setNewMessage("");
   };
 
+  /* ---------- UI GUARD (SAFE PLACE) ---------- */
   if (!activeChat) {
     return (
       <div className="h-full flex items-center justify-center text-gray-500">
@@ -177,28 +174,39 @@ const ChatWindow = ({ activeChat }) => {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b font-semibold flex flex-col">
-        <span>
-          {activeChat.isGroup
+      <div className="p-4 border-b bg-white flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold">
+          {(activeChat.isGroup
             ? activeChat.groupName
-            : otherUser?.username}
-        </span>
+            : otherUser?.username
+          )
+            ?.charAt(0)
+            .toUpperCase()}
+        </div>
 
-        {!activeChat.isGroup && otherUser && (
-          <span className="text-xs text-gray-500">
-            {isOnline
-              ? "Online"
-              : otherUser.lastSeen
-              ? `Last seen ${new Date(
-                  otherUser.lastSeen
-                ).toLocaleString()}`
-              : "Offline"}
-          </span>
-        )}
+        <div>
+          <p className="font-medium">
+            {activeChat.isGroup
+              ? activeChat.groupName
+              : otherUser?.username}
+          </p>
+
+          {!activeChat.isGroup && otherUser && (
+            <p className="text-xs text-gray-500">
+              {isOnline
+                ? "Online"
+                : otherUser.lastSeen
+                ? `Last seen ${new Date(
+                    otherUser.lastSeen
+                  ).toLocaleString()}`
+                : "Offline"}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-2 bg-gray-50">
+      <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-gradient-to-b from-gray-50 to-gray-100">
         {messages.map((msg) => {
           const senderId =
             typeof msg.sender === "string"
@@ -215,10 +223,10 @@ const ChatWindow = ({ activeChat }) => {
               }`}
             >
               <div
-                className={`max-w-[70%] px-4 py-2 rounded-lg text-sm break-words whitespace-pre-wrap ${
+                className={`max-w-[70%] px-4 py-2 rounded-2xl text-sm break-words whitespace-pre-wrap shadow ${
                   isOwn
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200"
+                    ? "bg-blue-600 text-white rounded-br-none"
+                    : "bg-white text-gray-800 rounded-bl-none"
                 }`}
               >
                 {msg.content}
@@ -227,7 +235,6 @@ const ChatWindow = ({ activeChat }) => {
           );
         })}
 
-        {/* Typing indicator */}
         {typingUser && (
           <div className="text-sm text-gray-500 italic">
             {typingUser} is typing...
@@ -240,15 +247,16 @@ const ChatWindow = ({ activeChat }) => {
       {/* Input */}
       <form
         onSubmit={sendMessage}
-        className="p-4 border-t flex gap-2"
+        className="p-4 border-t bg-white flex gap-2"
       >
         <input
-          className="flex-1 border rounded px-3 py-2"
+          className="flex-1 rounded-full border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
           placeholder="Type a message..."
           value={newMessage}
           onChange={handleTypingChange}
         />
-        <button className="bg-blue-600 text-white px-4 rounded">
+
+        <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 rounded-full transition">
           Send
         </button>
       </form>
