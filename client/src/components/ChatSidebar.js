@@ -4,13 +4,12 @@ import { useAuth } from "../context/AuthContext";
 
 const ChatSidebar = ({ activeChat, setActiveChat }) => {
   const [chats, setChats] = useState([]);
-  const { user } = useAuth();
+  const { user, onlineUsers } = useAuth(); // 👈 added onlineUsers
 
   useEffect(() => {
     const fetchChats = async () => {
       try {
         const res = await api.get("/chats");
-        // console.log("Chats API response:", res.data);//hhhhhhh
         setChats(res.data);
       } catch (error) {
         console.error("Failed to fetch chats");
@@ -20,15 +19,19 @@ const ChatSidebar = ({ activeChat, setActiveChat }) => {
     fetchChats();
   }, []);
 
-//   console.log("Logged in user:", user);
+  const getChatNameAndUser = (chat) => {
+    if (chat.isGroup) {
+      return { name: chat.groupName, otherUser: null };
+    }
 
-
-  const getChatName = (chat) => {
-    if (chat.isGroup) return chat.groupName;
     const otherUser = chat.members.find(
       (m) => m._id !== user._id
     );
-    return otherUser?.username || "Chat";
+
+    return {
+      name: otherUser?.username || "Chat",
+      otherUser,
+    };
   };
 
   return (
@@ -37,19 +40,34 @@ const ChatSidebar = ({ activeChat, setActiveChat }) => {
         Chats
       </h2>
 
-      {chats.map((chat) => (
-        <div
-          key={chat._id}
-          onClick={() => setActiveChat(chat)}
-          className={`p-4 cursor-pointer border-b hover:bg-gray-100 ${
-            activeChat?._id === chat._id
-              ? "bg-gray-200"
-              : ""
-          }`}
-        >
-          <p className="font-medium">{getChatName(chat)}</p>
-        </div>
-      ))}
+      {chats.map((chat) => {
+        const { name, otherUser } =
+          getChatNameAndUser(chat);
+
+        const isOnline =
+          otherUser &&
+          onlineUsers.includes(otherUser._id);
+
+        return (
+          <div
+            key={chat._id}
+            onClick={() => setActiveChat(chat)}
+            className={`p-4 cursor-pointer border-b hover:bg-gray-100 flex items-center justify-between ${
+              activeChat?._id === chat._id
+                ? "bg-gray-200"
+                : ""
+            }`}
+          >
+            {/* Chat name */}
+            <p className="font-medium">{name}</p>
+
+            {/* Online indicator */}
+            {!chat.isGroup && isOnline && (
+              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };

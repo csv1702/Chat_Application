@@ -3,12 +3,14 @@ import api from "../services/api";
 import {
   connectSocket,
   disconnectSocket,
+  getSocket,
 } from "../socket/socket";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchUser = async () => {
@@ -24,13 +26,45 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  /* ---------- SOCKET PRESENCE ---------- */
+  useEffect(() => {
+    if (!user) return;
+
+    const socket = getSocket();
+    if (!socket) return;
+
+    socket.on("user_online", (userId) => {
+      setOnlineUsers((prev) =>
+        prev.includes(userId) ? prev : [...prev, userId]
+      );
+    });
+
+    socket.on("user_offline", (userId) => {
+      setOnlineUsers((prev) =>
+        prev.filter((id) => id !== userId)
+      );
+    });
+
+    return () => {
+      socket.off("user_online");
+      socket.off("user_offline");
+    };
+  }, [user]);
+
   useEffect(() => {
     fetchUser();
     return () => disconnectSocket();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, setUser, loading }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        setUser,
+        loading,
+        onlineUsers,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

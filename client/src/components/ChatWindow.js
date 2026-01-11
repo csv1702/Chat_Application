@@ -5,8 +5,12 @@ import { getSocket } from "../socket/socket";
 
 const TYPING_TIMEOUT = 2000; // 2 seconds
 
+
+
 const ChatWindow = ({ activeChat }) => {
-  const { user } = useAuth();
+  const { user, onlineUsers } = useAuth();
+
+  
 
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
@@ -15,6 +19,23 @@ const ChatWindow = ({ activeChat }) => {
 
   const bottomRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+
+  /* ---------- GET OTHER USER (1–1 CHAT) ---------- */
+  
+  
+  const otherUser =
+  activeChat &&
+  !activeChat.isGroup &&
+  activeChat.members
+    ? activeChat.members.find(
+        (m) => m._id !== user._id
+      )
+    : null;
+
+
+  const isOnline =
+    otherUser &&
+    onlineUsers.includes(otherUser._id);
 
   /* ---------- FETCH MESSAGE HISTORY ---------- */
   useEffect(() => {
@@ -58,7 +79,7 @@ const ChatWindow = ({ activeChat }) => {
     const handleReceiveMessage = (message) => {
       if (message.chat !== activeChat?._id) return;
       setMessages((prev) => [...prev, message]);
-      setTypingUser(null); // stop typing on message receive
+      setTypingUser(null);
     };
 
     socket.on("receive_message", handleReceiveMessage);
@@ -97,7 +118,7 @@ const ChatWindow = ({ activeChat }) => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typingUser]);
 
-  /* ---------- HANDLE INPUT CHANGE (DEBOUNCED) ---------- */
+  /* ---------- HANDLE INPUT CHANGE ---------- */
   const handleTypingChange = (e) => {
     setNewMessage(e.target.value);
 
@@ -156,10 +177,24 @@ const ChatWindow = ({ activeChat }) => {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b font-semibold">
-        {activeChat.isGroup
-          ? activeChat.groupName
-          : "Conversation"}
+      <div className="p-4 border-b font-semibold flex flex-col">
+        <span>
+          {activeChat.isGroup
+            ? activeChat.groupName
+            : otherUser?.username}
+        </span>
+
+        {!activeChat.isGroup && otherUser && (
+          <span className="text-xs text-gray-500">
+            {isOnline
+              ? "Online"
+              : otherUser.lastSeen
+              ? `Last seen ${new Date(
+                  otherUser.lastSeen
+                ).toLocaleString()}`
+              : "Offline"}
+          </span>
+        )}
       </div>
 
       {/* Messages */}
@@ -180,15 +215,14 @@ const ChatWindow = ({ activeChat }) => {
               }`}
             >
               <div
-  className={`max-w-[70%] px-4 py-2 rounded-lg text-sm break-words whitespace-pre-wrap ${
-    isOwn
-      ? "bg-blue-600 text-white"
-      : "bg-gray-200"
-  }`}
->
-  {msg.content}
-</div>
-
+                className={`max-w-[70%] px-4 py-2 rounded-lg text-sm break-words whitespace-pre-wrap ${
+                  isOwn
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200"
+                }`}
+              >
+                {msg.content}
+              </div>
             </div>
           );
         })}
