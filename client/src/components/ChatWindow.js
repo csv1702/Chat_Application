@@ -115,6 +115,22 @@ const ChatWindow = ({ activeChat, onBack }) => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typingUser]);
 
+  /* ---------- MESSAGE DELETION LISTENER ---------- */
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    socket.on("message_deleted", ({ messageId }) => {
+      setMessages((prev) =>
+        prev.filter((m) => m._id !== messageId)
+      );
+    });
+
+    return () => {
+      socket.off("message_deleted");
+    };
+  }, []);
+
   /* ---------- INPUT CHANGE ---------- */
   const handleTypingChange = (e) => {
     setNewMessage(e.target.value);
@@ -163,6 +179,36 @@ const ChatWindow = ({ activeChat, onBack }) => {
     setNewMessage("");
   };
 
+  /* ---------- DELETE MESSAGE ---------- */
+  const handleDeleteMessage = async (messageId) => {
+    try {
+      await api.delete(`/messages/${messageId}`);
+      setMessages((prev) =>
+        prev.filter((m) => m._id !== messageId)
+      );
+
+      const socket = getSocket();
+      socket.emit("delete_message", {
+        messageId,
+        chatId: activeChat._id,
+      });
+    } catch {
+      alert("Failed to delete message");
+    }
+  };
+
+  /* ---------- CLEAR ALL MESSAGES ---------- */
+  const handleClearChat = async () => {
+    if (!window.confirm("Clear all messages?")) return;
+
+    try {
+      await api.delete(`/messages/chat/${activeChat._id}`);
+      setMessages([]);
+    } catch {
+      alert("Failed to clear chat");
+    }
+  };
+
   /* ---------- UI GUARD (SAFE PLACE) ---------- */
   if (!activeChat) {
     return (
@@ -206,6 +252,13 @@ const ChatWindow = ({ activeChat, onBack }) => {
       </p>
     )}
   </div>
+
+  <button
+    onClick={handleClearChat}
+    className="ml-auto text-sm text-red-600 hover:underline"
+  >
+    Clear Chat
+  </button>
 </div>
 
 
@@ -233,8 +286,18 @@ const ChatWindow = ({ activeChat, onBack }) => {
       : "bg-white text-gray-800 rounded-bl-none"
   }`}
 >
+                <div className="relative group">
+                  <p>{msg.content}</p>
 
-                {msg.content}
+                  {isOwn && (
+                    <button
+                      onClick={() => handleDeleteMessage(msg._id)}
+                      className="absolute -top-2 -right-2 hidden group-hover:block text-xs bg-red-500 text-white rounded px-2"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           );

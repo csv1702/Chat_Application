@@ -75,4 +75,10 @@ module.exports = (io, socket) => {
       console.error("Socket message_read error:", error);
     }
   });
+
+  // * ---------- Delete ---------- */
+  socket.on("delete_message", ({ messageId, chatId }) => {
+  socket.to(chatId).emit("message_deleted", { messageId });
+});
+
 };
