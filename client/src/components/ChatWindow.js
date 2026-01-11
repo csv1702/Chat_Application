@@ -5,7 +5,8 @@ import { getSocket } from "../socket/socket";
 
 const TYPING_TIMEOUT = 2000;
 
-const ChatWindow = ({ activeChat }) => {
+const ChatWindow = ({ activeChat, onBack }) => {
+
   const { user, onlineUsers } = useAuth();
 
   const [messages, setMessages] = useState([]);
@@ -175,35 +176,38 @@ const ChatWindow = ({ activeChat }) => {
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="p-4 border-b bg-white flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold">
-          {(activeChat.isGroup
-            ? activeChat.groupName
-            : otherUser?.username
-          )
-            ?.charAt(0)
-            .toUpperCase()}
-        </div>
+  {/* Back button (mobile only) */}
+  <button
+    onClick={onBack}
+    className="md:hidden text-blue-600 font-medium"
+  >
+    ←
+  </button>
 
-        <div>
-          <p className="font-medium">
-            {activeChat.isGroup
-              ? activeChat.groupName
-              : otherUser?.username}
-          </p>
+  <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold">
+    {(activeChat.isGroup
+      ? activeChat.groupName
+      : otherUser?.username
+    )
+      ?.charAt(0)
+      .toUpperCase()}
+  </div>
 
-          {!activeChat.isGroup && otherUser && (
-            <p className="text-xs text-gray-500">
-              {isOnline
-                ? "Online"
-                : otherUser.lastSeen
-                ? `Last seen ${new Date(
-                    otherUser.lastSeen
-                  ).toLocaleString()}`
-                : "Offline"}
-            </p>
-          )}
-        </div>
-      </div>
+  <div>
+    <p className="font-medium">
+      {activeChat.isGroup
+        ? activeChat.groupName
+        : otherUser?.username}
+    </p>
+
+    {!activeChat.isGroup && otherUser && (
+      <p className="text-xs text-gray-500">
+        {isOnline ? "Online" : "Offline"}
+      </p>
+    )}
+  </div>
+</div>
+
 
       {/* Messages */}
       <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-gradient-to-b from-gray-50 to-gray-100">
