@@ -64,3 +64,36 @@ exports.getUserChats = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch chats" });
   }
 };
+
+/* ---------------- ACCESS OR CREATE 1-1 CHAT ---------------- */
+exports.accessOneToOneChat = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID required" });
+    }
+
+    let chat = await Chat.findOne({
+      isGroup: false,
+      members: { $all: [req.userId, userId] },
+    }).populate("members", "username avatar isOnline");
+
+    if (chat) {
+      return res.json(chat);
+    }
+
+    const newChat = await Chat.create({
+      isGroup: false,
+      members: [req.userId, userId],
+    });
+
+    const populatedChat = await Chat.findById(newChat._id)
+      .populate("members", "username avatar isOnline");
+
+    res.status(201).json(populatedChat);
+  } catch (error) {
+    console.error("Access chat error:", error);
+    res.status(500).json({ message: "Failed to access chat" });
+  }
+};

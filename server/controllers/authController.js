@@ -91,3 +91,18 @@ exports.getMe = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch user" });
   }
 };
+
+/* ---------------- GET ALL USERS (except current) ---------------- */
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find(
+      { _id: { $ne: req.userId } },
+      "username email avatar isOnline lastSeen"
+    );
+
+    res.json(users);
+  } catch (error) {
+    console.error("Get users error:", error);
+    res.status(500).json({ message: "Failed to fetch users" });
+  }
+};
