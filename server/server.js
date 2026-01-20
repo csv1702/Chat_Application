@@ -22,6 +22,27 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
+// Simple in-memory cache
+const cache = new Map();
+const cacheMiddleware = (duration = 60000) => {
+  return (req, res, next) => {
+    const key = `${req.method}:${req.originalUrl}`;
+    const cachedData = cache.get(key);
+    
+    if (cachedData && Date.now() - cachedData.timestamp < duration) {
+      return res.json(cachedData.data);
+    }
+    
+    const originalJson = res.json;
+    res.json = function (data) {
+      cache.set(key, { data, timestamp: Date.now() });
+      return originalJson.call(this, data);
+    };
+    
+    next();
+  };
+};
+
 /* ---------- DATABASE ---------- */
 connectDB();
 
@@ -40,7 +61,7 @@ app.use(
 
 /* ---------- ROUTES ---------- */
 app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api/users", cacheMiddleware(30000), userRoutes); // Cache for 30s
 app.use("/api/chats", chatRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/uploads", uploadRoutes);

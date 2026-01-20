@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
   const fetchUser = async () => {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 45000); // 45s timeout for Render free tier
       
       const res = await api.get("/auth/me", { 
         signal: controller.signal 
