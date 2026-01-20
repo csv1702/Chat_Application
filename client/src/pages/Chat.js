@@ -5,7 +5,7 @@ import { disconnectSocket } from "../socket/socket";
 import { useNavigate } from "react-router-dom";
 
 const Chat = () => {
-  const { user, setUser } = useAuth();
+  const { setUser } = useAuth();
   const navigate = useNavigate();
 
   const logout = async () => {
