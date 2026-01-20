@@ -35,10 +35,11 @@ const Register = () => {
     }
 
     setLoading(true);
+    let timeoutId;
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
       const response = await api.post("/auth/register", {
         username,
