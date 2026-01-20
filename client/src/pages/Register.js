@@ -39,7 +39,8 @@ const Register = () => {
 
     try {
       const controller = new AbortController();
-      timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      // Increased to 40 seconds for slow Render free tier
+      timeoutId = setTimeout(() => controller.abort(), 40000);
 
       const response = await api.post("/auth/register", {
         username,
@@ -64,11 +65,13 @@ const Register = () => {
       clearTimeout(timeoutId);
       
       if (err.name === "AbortError") {
-        setError("Request timeout. Server not responding. Please try again.");
+        setError("Request took too long. The server may be slow. Please try again.");
       } else if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else if (err.response?.status === 400) {
         setError("Email already exists or invalid input");
+      } else if (err.code === "ECONNABORTED") {
+        setError("Connection timeout. Please check your internet and try again.");
       } else {
         setError(err.message || "Registration failed. Please check your details and try again.");
       }
@@ -141,7 +144,7 @@ const Register = () => {
           disabled={loading}
           className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white py-2 rounded font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? "Registering..." : "Register"}
+          {loading ? "Registering... (Please wait, server is slow)" : "Register"}
         </button>
       </form>
 

@@ -22,10 +22,12 @@ const Login = () => {
     }
 
     setLoading(true);
+    let timeoutId;
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      // Increased to 40 seconds for slow Render free tier
+      timeoutId = setTimeout(() => controller.abort(), 40000);
 
       await api.post("/auth/login", { email, password }, { signal: controller.signal });
       
@@ -35,12 +37,16 @@ const Login = () => {
       setUser(res.data);
       navigate("/");
     } catch (err) {
+      if (timeoutId) clearTimeout(timeoutId);
+      
       if (err.name === "AbortError") {
-        setError("Request timeout. Server not responding. Please try again.");
+        setError("Request took too long. The server may be slow. Please try again.");
       } else if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else if (err.response?.status === 401) {
         setError("Invalid email or password");
+      } else if (err.code === "ECONNABORTED") {
+        setError("Connection timeout. Please check your internet and try again.");
       } else {
         setError(err.message || "Login failed. Please try again.");
       }
@@ -87,7 +93,7 @@ const Login = () => {
           disabled={loading}
           className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white py-2 rounded font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? "Logging in..." : "Login"}
+          {loading ? "Logging in... (Please wait, server is slow)" : "Login"}
         </button>
       </form>
 
