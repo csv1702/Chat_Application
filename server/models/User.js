@@ -22,6 +22,16 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    bio: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    phone: {
+      type: String,
+      default: "",
+      trim: true,
+    },
     isOnline: {
       type: Boolean,
       default: false,
@@ -32,5 +42,11 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+/* ---------- DATABASE INDEXES FOR PERFORMANCE ---------- */
+userSchema.index({ email: 1 });
+userSchema.index({ username: 1 });
+userSchema.index({ isOnline: 1 });
+userSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model("User", userSchema);

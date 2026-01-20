@@ -10,6 +10,8 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const messageRoutes = require("./routes/messageRoutes");
+const userRoutes = require("./routes/userRoutes");
+const uploadRoutes = require("./routes/uploadRoutes");
 
 const chatSocket = require("./sockets/chatSocket");
 const socketAuth = require("./utils/socketAuth");
@@ -24,7 +26,8 @@ const server = http.createServer(app);
 connectDB();
 
 /* ---------- MIDDLEWARE ---------- */
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(cookieParser());
 app.use(morgan("dev"));
 
@@ -37,8 +40,10 @@ app.use(
 
 /* ---------- ROUTES ---------- */
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/chats", chatRoutes);
 app.use("/api/messages", messageRoutes);
+app.use("/api/uploads", uploadRoutes);
 
 /* ---------- HEALTH CHECK ---------- */
 app.get("/", (req, res) => {

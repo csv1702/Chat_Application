@@ -1,7 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { getSocket } from "../socket/socket";
+import MessageStatusIcon from "./MessageStatusIcon";
+import ImageUpload from "./ImageUpload";
+import MediaDisplay from "./MediaDisplay";
 
 const TYPING_TIMEOUT = 2000;
 
@@ -179,6 +182,19 @@ const ChatWindow = ({ activeChat, onBack }) => {
     setNewMessage("");
   };
 
+  /* ---------- HANDLE MEDIA UPLOAD ---------- */
+  const handleMediaUpload = (message) => {
+    setMessages((prev) => [...prev, message]);
+    
+    const socket = getSocket();
+    if (socket) {
+      socket.emit("send_message", {
+        chatId: activeChat._id,
+        content: message.content,
+      });
+    }
+  };
+
   /* ---------- DELETE MESSAGE ---------- */
   const handleDeleteMessage = async (messageId) => {
     try {
@@ -212,20 +228,20 @@ const ChatWindow = ({ activeChat, onBack }) => {
   /* ---------- UI GUARD (SAFE PLACE) ---------- */
   if (!activeChat) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-500">
+      <div className="h-full flex items-center justify-center text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-950">
         Select a chat to start messaging
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col bg-white dark:bg-gray-950">
       {/* Header */}
-      <div className="p-4 border-b bg-white flex items-center gap-3">
+      <div className="p-4 border-b dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center gap-3">
   {/* Back button (mobile only) */}
   <button
     onClick={onBack}
-    className="md:hidden text-blue-600 font-medium"
+    className="md:hidden text-blue-600 dark:text-blue-400 font-medium"
   >
     ←
   </button>
@@ -240,14 +256,14 @@ const ChatWindow = ({ activeChat, onBack }) => {
   </div>
 
   <div>
-    <p className="font-medium">
+    <p className="font-medium text-gray-900 dark:text-white">
       {activeChat.isGroup
         ? activeChat.groupName
         : otherUser?.username}
     </p>
 
     {!activeChat.isGroup && otherUser && (
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-gray-500 dark:text-gray-400">
         {isOnline ? "Online" : "Offline"}
       </p>
     )}
@@ -255,7 +271,7 @@ const ChatWindow = ({ activeChat, onBack }) => {
 
   <button
     onClick={handleClearChat}
-    className="ml-auto text-sm text-red-600 hover:underline"
+    className="ml-auto text-sm text-red-600 dark:text-red-400 hover:underline"
   >
     Clear Chat
   </button>
@@ -263,7 +279,7 @@ const ChatWindow = ({ activeChat, onBack }) => {
 
 
       {/* Messages */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-gradient-to-b from-gray-50 to-gray-100">
+      <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
         {messages.map((msg) => {
           const senderId =
             typeof msg.sender === "string"
@@ -283,11 +299,16 @@ const ChatWindow = ({ activeChat, onBack }) => {
   className={`max-w-[70%] px-4 py-2 rounded-2xl text-sm break-words whitespace-pre-wrap shadow transition-all duration-200 ease-out ${
     isOwn
       ? "bg-blue-600 text-white rounded-br-none translate-y-0"
-      : "bg-white text-gray-800 rounded-bl-none"
+      : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-none"
   }`}
 >
                 <div className="relative group">
-                  <p>{msg.content}</p>
+                  <div className="flex items-center gap-1">
+                    <p>{msg.content}</p>
+                    {isOwn && <MessageStatusIcon message={msg} userId={user._id} />}
+                  </div>
+
+                  <MediaDisplay attachments={msg.attachments} messageType={msg.messageType} />
 
                   {isOwn && (
                     <button
@@ -304,7 +325,7 @@ const ChatWindow = ({ activeChat, onBack }) => {
         })}
 
         {typingUser && (
-          <div className="text-sm text-gray-500 italic animate-pulse">
+          <div className="text-sm text-gray-500 dark:text-gray-400 italic animate-pulse">
             {typingUser} is typing...
           </div>
         )}
@@ -315,17 +336,18 @@ const ChatWindow = ({ activeChat, onBack }) => {
       {/* Input */}
       <form
         onSubmit={sendMessage}
-        className="p-4 border-t bg-white flex gap-2"
+        className="p-4 border-t dark:border-gray-700 bg-white dark:bg-gray-800 flex gap-2"
       >
+        <ImageUpload onUpload={handleMediaUpload} activeChat={activeChat} />
+
         <input
-          className="flex-1 rounded-full border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="flex-1 rounded-full border dark:border-gray-600 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
           placeholder="Type a message..."
           value={newMessage}
           onChange={handleTypingChange}
         />
 
-        <button className="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white px-5 rounded-full transition transform duration-150">
-
+        <button type="submit" className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 active:scale-95 text-white px-5 rounded-full transition transform duration-150">
           Send
         </button>
       </form>
@@ -333,4 +355,4 @@ const ChatWindow = ({ activeChat, onBack }) => {
   );
 };
 
-export default ChatWindow;
+export default memo(ChatWindow);

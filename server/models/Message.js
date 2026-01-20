@@ -20,7 +20,23 @@ const messageSchema = new mongoose.Schema(
     messageType: {
       type: String,
       default: "text",
+      enum: ["text", "image", "file", "video"],
     },
+    attachments: [
+      {
+        url: {
+          type: String,
+          required: true,
+        },
+        type: {
+          type: String,
+          enum: ["image", "video", "file", "audio"],
+          required: true,
+        },
+        filename: String,
+        size: Number, // in bytes
+      },
+    ],
     readBy: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -30,5 +46,11 @@ const messageSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+/* ---------- DATABASE INDEXES FOR PERFORMANCE ---------- */
+messageSchema.index({ chat: 1, createdAt: -1 });
+messageSchema.index({ sender: 1 });
+messageSchema.index({ messageType: 1 });
+messageSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model("Message", messageSchema);

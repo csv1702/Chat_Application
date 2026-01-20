@@ -29,7 +29,7 @@ const ChatLayout = () => {
   };
 
   return (
-    <div className="h-full flex">
+    <div className="h-full flex bg-white dark:bg-gray-950">
       {/* Sidebar */}
       <div
         className={`w-full md:w-1/3 lg:w-1/4 ${
@@ -38,7 +38,7 @@ const ChatLayout = () => {
       >
         <button
           onClick={() => setShowUsers(!showUsers)}
-          className="p-3 text-blue-600 font-medium border-b w-full text-left hover:bg-gray-50"
+          className="p-3 text-blue-600 dark:text-blue-400 font-medium border-b dark:border-gray-700 w-full text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition"
         >
           {showUsers ? "Back to Chats" : "New Chat"}
         </button>
@@ -57,7 +57,7 @@ const ChatLayout = () => {
       <div
         className={`flex-1 ${
           showSidebar ? "hidden" : "block"
-        } md:block`}
+        } md:block bg-white dark:bg-gray-950`}
       >
         <ChatWindow
           activeChat={activeChat}
