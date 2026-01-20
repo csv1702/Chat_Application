@@ -15,10 +15,18 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
-      const res = await api.get("/auth/me");
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      const res = await api.get("/auth/me", { 
+        signal: controller.signal 
+      });
+      clearTimeout(timeoutId);
       setUser(res.data);
       connectSocket();
-    } catch {
+    } catch (error) {
+      // Silently fail - user is not logged in
+      console.error("Auth check failed:", error.message);
       setUser(null);
       disconnectSocket();
     } finally {
