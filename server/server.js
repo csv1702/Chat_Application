@@ -51,10 +51,20 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(cookieParser());
 app.use(morgan("dev"));
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://real-time-chatting-web-service.netlify.app"
+];
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   })
 );
@@ -74,7 +84,7 @@ app.get("/", (req, res) => {
 /* ---------- SOCKET.IO ---------- */
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL,
+    origin: allowedOrigins,
     credentials: true,
   },
 });

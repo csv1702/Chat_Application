@@ -57,18 +57,21 @@ exports.login = async (req, res) => {
     const accessToken = generateAccessToken(user._id);
     const refreshToken = generateRefreshToken(user._id);
 
-    res
-      .cookie("accessToken", accessToken, {
-        httpOnly: true,
-        sameSite: "lax",
-      })
-      .cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        sameSite: "lax",
-      })
-      .json({
-        message: "Login successful",
-      });
+    const isProd = process.env.NODE_ENV === "production";
+
+res
+  .cookie("accessToken", accessToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
+  })
+  .cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
+  })
+  .json({ message: "Login successful" });
+
   } catch (error) {
     res.status(500).json({ message: "Login failed" });
   }
