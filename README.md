@@ -2,7 +2,7 @@
 
 A full-stack real-time chat web application designed to provide fast, secure, and seamless communication between users. This project is built using modern web technologies and follows a clean, scalable architecture for both frontend and backend development.
 
-## 🔗 Live Application
+## Live Application
 
 **Live Website:** [https://real-time-chatting-web-service.netlify.app/](https://real-time-chatting-web-service.netlify.app/)
 
@@ -10,7 +10,7 @@ The frontend is deployed on Netlify and communicates with a separately hosted ba
 
 ---
 
-## 📖 Project Overview
+## Project Overview
 
 This project focuses on implementing real-time communication using web sockets while maintaining secure user authentication and an intuitive user interface. It demonstrates practical usage of the **MERN stack** along with **Socket.IO** to handle live messaging efficiently.
 
@@ -18,7 +18,7 @@ The application allows users to create accounts, log in securely, update their p
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 - **Secure Authentication**: JSON Web Tokens (JWT) & encrypted password storage with bcrypt.
 - **Real-Time Messaging**: One-to-one messaging powered by Socket.IO.
@@ -29,7 +29,7 @@ The application allows users to create accounts, log in securely, update their p
 
 ---
 
-## 🛠️ Technologies Used
+## Technologies Used
 
 ### Frontend
 
@@ -52,7 +52,7 @@ The application allows users to create accounts, log in securely, update their p
 
 ---
 
-## 📂 Folder Structure
+## Folder Structure
 
 ```text
 Chat_Application/
@@ -80,7 +80,7 @@ Chat_Application/
 └── README.md
 ```
 
-## ⚙️ Environment Configuration
+## Environment Configuration
 
 Create `.env` files in your **server** and **client** directories with the following variables:
 
@@ -106,7 +106,7 @@ REACT_APP_SOCKET_URL=http://localhost:5000
 
 ---
 
-## 🚀 Local Setup Instructions
+##  Local Setup Instructions
 
 Follow these steps to run the project locally.
 
@@ -140,7 +140,7 @@ Once both servers are running, the application can be accessed locally at:
 
 ---
 
-## 📡 Real-Time Communication Workflow
+## Real-Time Communication Workflow
 
 - The client establishes a socket connection immediately after user authentication.
 - The server tracks active users and maps them to socket sessions.
@@ -149,7 +149,7 @@ Once both servers are running, the application can be accessed locally at:
 
 ---
 
-## ☁️ Deployment Details
+## Deployment Details
 
 - **Frontend:** Hosted on Netlify using a production React build.
 - **Backend:** Can be deployed on platforms such as Render, Railway, or AWS.
@@ -158,7 +158,7 @@ Once both servers are running, the application can be accessed locally at:
 
 ---
 
-## 🔮 Possible Improvements
+## Possible Improvements
 
 - [ ] File and media sharing in chats
 - [ ] Push notifications
@@ -166,7 +166,7 @@ Once both servers are running, the application can be accessed locally at:
 
 ---
 
-## 👨‍💻 Author
+## 👨 Author
 
 Chandra Shekhar Verma
 
