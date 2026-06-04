@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { queryClient } from "../lib/queryClient";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -35,6 +36,7 @@ const Login = () => {
       clearTimeout(timeoutId);
       
       setUser(res.data);
+      queryClient.setQueryData(["auth", "me"], res.data);
       navigate("/");
     } catch (err) {
       if (timeoutId) clearTimeout(timeoutId);

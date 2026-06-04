@@ -3,6 +3,7 @@ import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import { disconnectSocket } from "../socket/socket";
 import { useNavigate } from "react-router-dom";
+import { queryClient } from "../lib/queryClient";
 
 const Chat = () => {
   const { setUser } = useAuth();
@@ -12,6 +13,7 @@ const Chat = () => {
     await api.post("/auth/logout");
     disconnectSocket();
     setUser(null);
+    queryClient.removeQueries({ queryKey: ["auth", "me"] });
   };
 
   return (

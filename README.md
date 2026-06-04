@@ -89,11 +89,14 @@ Create `.env` files in your **server** and **client** directories with the follo
 ```env
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret_key
+JWT_ACCESS_SECRET=your_access_token_secret
+JWT_REFRESH_SECRET=your_refresh_token_secret
 CLOUDINARY_CLOUD_NAME=your_cloudinary_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 ```
+
+If you use MongoDB Atlas, make sure the cluster is reachable from your machine and the URI is correct.
 
 ### Frontend (`client/.env`)
 

@@ -2,11 +2,12 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { queryClient } from "../lib/queryClient";
 
 const Profile = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, setUser } = useAuth();
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -65,6 +66,8 @@ const Profile = () => {
 
       const res = await api.put("/users/profile", formData);
       setProfile(res.data.user);
+      setUser(res.data.user);
+      queryClient.setQueryData(["auth", "me"], res.data.user);
       setIsEditing(false);
       setSuccess("Profile updated successfully!");
       setTimeout(() => setSuccess(""), 3000);
@@ -86,6 +89,8 @@ const Profile = () => {
           avatar: reader.result,
         });
         setProfile(res.data.user);
+        setUser(res.data.user);
+        queryClient.setQueryData(["auth", "me"], res.data.user);
         setSuccess("Avatar updated successfully!");
         setTimeout(() => setSuccess(""), 3000);
       } catch (err) {

@@ -44,7 +44,6 @@ const userSchema = new mongoose.Schema(
 );
 
 /* ---------- DATABASE INDEXES FOR PERFORMANCE ---------- */
-userSchema.index({ email: 1 });
 userSchema.index({ username: 1 });
 userSchema.index({ isOnline: 1 });
 userSchema.index({ createdAt: -1 });
