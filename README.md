@@ -10,14 +10,6 @@ The frontend is deployed on Netlify and communicates with a separately hosted ba
 
 ---
 
-## Project Overview
-
-This project focuses on implementing real-time communication using web sockets while maintaining secure user authentication and an intuitive user interface. It demonstrates practical usage of the **MERN stack** along with **Socket.IO** to handle live messaging efficiently.
-
-The application allows users to create accounts, log in securely, update their profiles, and exchange messages instantly without refreshing the page.
-
----
-
 ## Key Features
 
 - **Secure Authentication**: JSON Web Tokens (JWT) & encrypted password storage with bcrypt.
@@ -26,29 +18,6 @@ The application allows users to create accounts, log in securely, update their p
 - **User Profiles**: Profile creation and image upload capabilities.
 - **Responsive UI**: Clean interface optimized for different screen sizes.
 - **Robust Backend**: RESTful API structure with proper error handling.
-
----
-
-## Technologies Used
-
-### Frontend
-
-- React.js
-- React Router DOM
-- Axios
-- Socket.IO Client
-- Tailwind CSS
-
-### Backend
-
-- Node.js
-- Express.js
-- MongoDB & Mongoose
-- Socket.IO
-- JWT Authentication
-- Multer & Cloudinary
-- bcrypt
-- dotenv
 
 ---
 
@@ -61,10 +30,11 @@ Chat_Application/
 │   ├── public/
 │   └── src/
 │       ├── components/
-│       ├── context/
+│       ├── hooks/
 │       ├── pages/
 │       ├── services/
 │       ├── socket/
+│       ├── store/
 │       └── App.js
 │
 ├── server/
@@ -101,44 +71,33 @@ If you use MongoDB Atlas, make sure the cluster is reachable from your machine a
 ### Frontend (`client/.env`)
 
 ```env
-REACT_APP_API_BASE_URL=http://localhost:5000
-REACT_APP_SOCKET_URL=http://localhost:5000
+VITE_API_BASE_URL=http://localhost:5000
+VITE_SOCKET_URL=http://localhost:5000
 ```
-
-````
 
 ---
 
-##  Local Setup Instructions
+## 🚀 Quick Start / How to Run
 
-Follow these steps to run the project locally.
+Follow these simple steps to run the application locally.
 
-### Step 1: Clone the Repository
-
-```bash
-git clone https://github.com/csv1702/Chat_Application.git
-cd Chat_Application
-````
-
-### Step 2: Backend Setup
-
+### 1. Start the Backend Server
+In your first terminal window:
 ```bash
 cd server
 npm install
 npm run dev
 ```
 
-### Step 3: Frontend Setup
-
-Open a new terminal window:
-
+### 2. Start the Frontend Client (Vite)
+In a second terminal window:
 ```bash
 cd client
 npm install
 npm start
 ```
 
-Once both servers are running, the application can be accessed locally at:
+Once both are running, open your browser and navigate to:
 **[http://localhost:3000](http://localhost:3000)**
 
 ---
@@ -147,7 +106,7 @@ Once both servers are running, the application can be accessed locally at:
 
 - The client establishes a socket connection immediately after user authentication.
 - The server tracks active users and maps them to socket sessions.
-- Messages are transmitted instantly using Socket.IO events (`send-msg`, `msg-recieve`).
+- Messages are transmitted instantly using Socket.IO events (`send_message`, `receive_message`).
 - Connections are updated automatically on user disconnect or logout.
 
 ---
@@ -172,5 +131,3 @@ Once both servers are running, the application can be accessed locally at:
 ## 👨 Author
 
 Chandra Shekhar Verma
-
----

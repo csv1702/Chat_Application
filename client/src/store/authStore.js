@@ -24,16 +24,29 @@ const useAuthStore = create((set) => ({
 
 export default useAuthStore;
 
-export const useAuth = () =>
-  useAuthStore((state) => ({
-    user: state.user,
-    loading: state.loading,
-    onlineUsers: state.onlineUsers,
-    setUser: state.setUser,
-    clearUser: state.clearUser,
-    setLoading: state.setLoading,
-    setOnlineUsers: state.setOnlineUsers,
-    addOnlineUser: state.addOnlineUser,
-    removeOnlineUser: state.removeOnlineUser,
-    resetAuth: state.resetAuth,
-  }));
+export const useAuth = () => {
+  const user = useAuthStore((state) => state.user);
+  const loading = useAuthStore((state) => state.loading);
+  const onlineUsers = useAuthStore((state) => state.onlineUsers);
+  const setUser = useAuthStore((state) => state.setUser);
+  const clearUser = useAuthStore((state) => state.clearUser);
+  const setLoading = useAuthStore((state) => state.setLoading);
+  const setOnlineUsers = useAuthStore((state) => state.setOnlineUsers);
+  const addOnlineUser = useAuthStore((state) => state.addOnlineUser);
+  const removeOnlineUser = useAuthStore((state) => state.removeOnlineUser);
+  const resetAuth = useAuthStore((state) => state.resetAuth);
+
+  return {
+    user,
+    loading,
+    onlineUsers,
+    setUser,
+    clearUser,
+    setLoading,
+    setOnlineUsers,
+    addOnlineUser,
+    removeOnlineUser,
+    resetAuth,
+  };
+};
+

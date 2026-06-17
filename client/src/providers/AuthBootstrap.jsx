@@ -1,8 +1,9 @@
 import { useEffect } from "react";
-import api from "../services/api";
 import useAuthStore from "../store/authStore";
 import useChatStore from "../store/chatStore";
 import { connectSocket, disconnectSocket } from "../socket/socket";
+
+import { useCurrentUser } from "../hooks/useAuthQueries";
 
 const AuthBootstrap = ({ children }) => {
   const setUser = useAuthStore((state) => state.setUser);
@@ -13,33 +14,8 @@ const AuthBootstrap = ({ children }) => {
   const user = useAuthStore((state) => state.user);
   const resetChatUi = useChatStore((state) => state.resetChatUi);
 
-  useEffect(() => {
-    let isActive = true;
-
-    const bootstrapAuth = async () => {
-      try {
-        const response = await api.get("/auth/me");
-
-        if (!isActive) return;
-
-        setUser(response.data);
-      } catch (error) {
-        if (!isActive) return;
-
-        clearUser();
-      } finally {
-        if (isActive) {
-          setLoading(false);
-        }
-      }
-    };
-
-    bootstrapAuth();
-
-    return () => {
-      isActive = false;
-    };
-  }, [clearUser, setLoading, setUser]);
+  // Run the bootstrap query hook
+  useCurrentUser();
 
   useEffect(() => {
     if (!user) {

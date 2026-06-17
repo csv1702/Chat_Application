@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
 import api from "../services/api";
+import { Button } from "@/components/ui/button";
+import { Paperclip, Loader2 } from "lucide-react";
 
 const ImageUpload = ({ onUpload, activeChat }) => {
   const [uploading, setUploading] = useState(false);
@@ -85,18 +87,24 @@ const ImageUpload = ({ onUpload, activeChat }) => {
         accept="image/*"
       />
 
-      <button
+      <Button
         type="button"
+        size="icon"
+        variant="ghost"
         onClick={() => fileInputRef.current?.click()}
         disabled={uploading || !activeChat}
-        className="text-xl hover:opacity-70 disabled:opacity-50 transition"
+        className="rounded-full text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white shrink-0 w-10 h-10"
         title={uploading ? "Uploading..." : "Attach image"}
       >
-        {uploading ? "⏳" : "🖼️"}
-      </button>
+        {uploading ? (
+          <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+        ) : (
+          <Paperclip className="w-5 h-5" />
+        )}
+      </Button>
 
       {error && (
-        <div className="absolute top-full right-0 mt-2 bg-red-500 text-white text-xs p-2 rounded whitespace-nowrap z-50 max-w-xs">
+        <div className="absolute bottom-full left-0 mb-2 bg-red-500 text-white text-[10px] p-2 rounded shadow-lg whitespace-nowrap z-55">
           {error}
         </div>
       )}
@@ -105,3 +113,4 @@ const ImageUpload = ({ onUpload, activeChat }) => {
 };
 
 export default ImageUpload;
+

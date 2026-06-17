@@ -28,17 +28,31 @@ const useChatStore = create((set) => ({
 
 export default useChatStore;
 
-export const useChat = () =>
-  useChatStore((state) => ({
-    activeChat: state.activeChat,
-    isSidebarOpen: state.isSidebarOpen,
-    showUserList: state.showUserList,
-    setActiveChat: state.setActiveChat,
-    clearActiveChat: state.clearActiveChat,
-    openSidebar: state.openSidebar,
-    closeSidebar: state.closeSidebar,
-    toggleSidebar: state.toggleSidebar,
-    setShowUserList: state.setShowUserList,
-    toggleShowUserList: state.toggleShowUserList,
-    resetChatUi: state.resetChatUi,
-  }));
+export const useChat = () => {
+  const activeChat = useChatStore((state) => state.activeChat);
+  const isSidebarOpen = useChatStore((state) => state.isSidebarOpen);
+  const showUserList = useChatStore((state) => state.showUserList);
+  const setActiveChat = useChatStore((state) => state.setActiveChat);
+  const clearActiveChat = useChatStore((state) => state.clearActiveChat);
+  const openSidebar = useChatStore((state) => state.openSidebar);
+  const closeSidebar = useChatStore((state) => state.closeSidebar);
+  const toggleSidebar = useChatStore((state) => state.toggleSidebar);
+  const setShowUserList = useChatStore((state) => state.setShowUserList);
+  const toggleShowUserList = useChatStore((state) => state.toggleShowUserList);
+  const resetChatUi = useChatStore((state) => state.resetChatUi);
+
+  return {
+    activeChat,
+    isSidebarOpen,
+    showUserList,
+    setActiveChat,
+    clearActiveChat,
+    openSidebar,
+    closeSidebar,
+    toggleSidebar,
+    setShowUserList,
+    toggleShowUserList,
+    resetChatUi,
+  };
+};
+
